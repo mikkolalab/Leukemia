@@ -1,0 +1,207 @@
+---
+title: "Untitled"
+author: "Giovanni"
+date: "2024-05-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(cli)
+library(rlang) 
+library(lifecycle) 
+library(reticulate)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(reshape2)
+library(Biostrings)
+library(ggtranscript)
+library(forcats)
+library(rtracklayer)
+library(patchwork)
+library(RColorBrewer)
+library(data.table)
+library(vcfR)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+# Read variants
+```{r}
+vcf <- read.vcfR("data/shortread_10X_5UTR_singlecell_mecom/variants_of_interest.vcf")
+vcf <- as.data.frame(getFIX(vcf))
+vcf$allele <- paste(vcf$REF, vcf$ALT, sep = ">")
+vcf$POS <- as.numeric(vcf$POS)
+head(vcf)
+```
+
+
+```{r, fig.height=12, fig.width=10}
+setwd('/Users/giovanni/hoffman_folder/projects/MLLT3_longread_project/')
+
+gene.lst <- c("ABL1", "ASXL1", "CBL", "ABL1", "CALR", "CUX1", "MECOM", "MLLT3", "RUNX1", "DOT1L", "GATA1", "GATA2", "IL1RAP", "KRAS", "PTPN11", "NRAS", "ASXL1", "SRSF2", "ETV6", "SF3B1", "PTPRM")
+DATASET <- 'mecom2' 
+
+gene.lst <- c( "MECOM", "MLLT3")
+DATASET <- 'mecom3'
+
+gene.lst <- c( "GATA1", "MLLT3")
+DATASET <- 'fetalliver'
+
+for (gene in gene.lst){
+  
+    cov.file <- paste('data/plots/densities.', DATASET, "_", gene, ".sashimi", sep = "")
+    gtf.file <- paste('data/plots/densities.', DATASET, "_", gene, ".", gene, ".gtf", sep = "")
+    
+    quant <- fread(cov.file, sep = '\t', header = F)
+    names(quant) <- c('idx', 'lab', 'pos', 'DP')
+    
+    #quant$lab <- factor(quant$lab, levels = c("mecom_BM1", "mecom_BM5", "mecom_BM3", "mecom_MPB2", "mecom_4063",   "mecom_4543", "mecom-trans-7347", "mecom_3656","mecom_3667", "mecom_3622","mecom_112", "mecom_111", "mecom_028", "mecom_10326",   "AML-1","AML-2", "AML-3", "AML-4"))
+    
+    
+    quant <- quant[quant$pos > 169500000 | quant$pos < 169400000,]
+    
+    
+    my.gtf  <- as.data.frame(import(gtf.file))
+    my.gtf  <- my.gtf %>% dplyr::filter(gene_name == gene) 
+    my.exon <- my.gtf %>% dplyr::filter(type == "exon") 
+    my.CDS  <- my.gtf %>% dplyr::filter(type == "CDS") 
+    my.introns <- to_intron(my.exon, "transcript_id") 
+    max.end   <- max(my.gtf$end)
+    min.start <- min(my.gtf$start)
+    
+    # subvcf
+    sub.vcf <- vcf[vcf$CHROM %in% my.exon$seqnames, ]
+    print(head(sub.vcf))
+    
+    g1 <- ggplot(quant, aes(y = DP, x = pos))+
+    		geom_line(aes(color = lab)) +
+    		labs(x = NULL, y = "Coverage")+
+    		facet_grid(lab~., scales = 'free')+
+        #scale_color_manual(values = brewer.pal(15, 'Spectral'))+
+        coord_cartesian(xlim = c(min.start, max.end))+
+    		theme_classic() +
+        theme(strip.text.y = element_text(angle = 0),
+              legend.position = "none")
+    
+    g2 <- ggplot(my.exon, aes( xstart = start , xend = end, y = transcript_id)) +
+      geom_vline(xintercept = sub.vcf$POS, color = 'red', alpha = 0.66)+
+    	geom_intron(data = my.introns, aes(strand = strand), arrow.min.intron.length = 50000, size = 0.3)+
+    	geom_range( data = my.exon, height = 0.25) +
+    	geom_range( data = my.CDS, height = 0.5) +
+    	facet_wrap(gene_name ~., scales = 'free', ncol = 1)+
+    	labs(x = "Position") + 
+    	theme_bw() + 
+      coord_cartesian(xlim = c(min.start, max.end))+
+    	theme(legend.position="bottom")
+    
+ 
+    patched_plot <- (g1  /g2) + plot_layout(heights = c(0.75, 0.25))
+    
+    plot.file <- paste('data/plots/densities.', DATASET, "_", gene,  ".density_plot.pdf", sep = "")
+    pdf(plot.file, width = 10, height = 12)
+    print(patched_plot)
+    dev.off()
+    
+    
+    print(gene)
+}
+
+print(patched_plot)
+
+
+```
+
+
+
+```{r , fig.width=6, fig.width=13}
+setwd('/Users/giovanni/hoffman_folder/projects/MLLT3_longread_project/')
+
+sm.lst <- c("028", "10326","111","112","3622","3656","3667","4063","4543","7347","7347_trans","BM1","BM3","MPB2","BM5","AML-1","AML-2", "AML-3", "AML-4")
+
+gene.lst <- c("KRAS", "CALR", "CUX1", "PTPN11", "NRAS", "RUNX1", "ASXL1","SRSF2", "ETV6", "CBL", "ABL1", "TET2", "GATA2", "SF3B1")
+gene.lst <- c("GATA2", "MECOM", "MLLT3", "RUNX1")
+
+
+DATASET <- 'mecom2' 
+
+for (gene in gene.lst){
+  
+  for (sm in sm.lst){
+    
+    gtf.file <- paste('data/plots/densities.', DATASET, "_", gene, ".", sm, '.', gene, ".gtf", sep = "")
+    cov.file <- paste('data/plots/densities.', DATASET, "_", gene, ".", sm, ".sashimi", sep = "")
+    
+    size <- file.info(cov.file)$size 
+    
+    if (size < 1){
+      next
+    }
+    
+    quant <- fread(cov.file, sep = '\t', header = F)
+    names(quant) <- c('idx', 'lab', 'pos', 'DP')
+    
+    dim(quant)
+    quant <- quant[quant$pos < 169483600 | quant$pos > 169484200,] #chr3:169,483,647-169,484,106
+    dim(quant)
+    
+    my.gtf  <- as.data.frame(import(gtf.file))
+    my.gtf  <- my.gtf %>% dplyr::filter(gene_name == gene) 
+    my.exon <- my.gtf %>% dplyr::filter(type == "exon") 
+    my.CDS  <- my.gtf %>% dplyr::filter(type == "CDS") 
+    my.introns <- to_intron(my.exon, "transcript_id") 
+    
+    max.end   <- max(my.gtf$end)
+    min.start <- min(my.gtf$start)
+    
+    # subvcf
+    sub.vcf <- vcf[vcf$CHROM %in% my.exon$seqnames, ]
+ 
+    
+    g1 <- ggplot(quant, aes(y = DP, x = pos))+
+    		geom_line(aes(color = lab)) +
+    		labs(x = NULL, y = "Coverage")+
+    		facet_grid(lab~.)+
+        coord_cartesian(xlim = c(min.start, max.end))+
+    		theme_classic() +
+        theme(strip.text.y = element_text(angle = 0),
+              legend.position = "none")
+    
+    arrow.iv <- as.integer((max.end - min.start)/4)
+    
+    g2 <- ggplot(my.exon, aes( xstart = start , xend = end, y = transcript_id)) +
+      geom_vline(xintercept = sub.vcf$POS, color = 'red', alpha = 0.66) +
+    	geom_intron(data = my.introns, aes(strand = strand), arrow.min.intron.length = arrow.iv, size = 0.3)+
+    	geom_range( data = my.exon, height = 0.25) +
+    	geom_range( data = my.CDS, height = 0.5) +
+    	facet_wrap(gene_name ~., scales = 'free', ncol = 1)+
+    	labs(x = "Position") + 
+    	theme_bw() + 
+      coord_cartesian(xlim = c(min.start, max.end))+
+    	theme(legend.position="bottom")
+    
+ 
+    patched_plot <- (g1  /g2) + plot_layout(heights = c(0.75, 0.25))
+
+    
+    plot.file <- paste('data/plots/densities.', DATASET, "_", gene, ".", sm, ".unscaled.density_plot.pdf", sep = "")
+    pdf(plot.file, width = 10, height = 12)
+    print(patched_plot)
+    dev.off()
+    
+    
+    print(gene)
+    print(sm)
+    print("++++++")
+    
+    
+  }
+}
+
+```
+
