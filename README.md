@@ -1,3 +1,8 @@
+## 2-pass STAR alignment 
+
+remap.two_pass_start.sh
+
+
 ## Subset bam file by cell clusters 
 
 This script splits the reads from the bulk bam file by cell clusters. 
@@ -8,7 +13,11 @@ Finally, for each read, it looks up the cluster assigment and writes a new bam f
 
 Usage:
 ```
-python subset_metacell_mecom_sampels.py -s sample1 -b sample1.bam -f sample1.fq.gz -m seurat.metadata.csv 
+python subset_metacell_mecom_sampels.py \
+	-s sample1 \
+	-b sample1.bam \
+	-f sample1.R1.fastq.gz \
+	-m seurat.metadata.csv 
 ```
 
 You can convert the seurat object into a csv file in R
@@ -36,3 +45,13 @@ The script will split the bam file based on the `Cell_type` column.
 
 You may need to edit the Seurat obhect to match this format.
 
+
+## Make density plots
+
+
+python ggsashimi.py \
+       -b data/plots/densities.${dataset}_samples.fofn.txt \
+       -o data/plots/densities.${dataset}_${GENE} \
+       --gtf gencode.v44.comprehensive.annotation.gtf.gz \
+       --gene-gtf gencode.v44.basic.annotation.gene_only.gtf \
+       --gene ${GENE}
