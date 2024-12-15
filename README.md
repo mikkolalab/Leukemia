@@ -1,4 +1,12 @@
-# Requirements
+# Table of Contents  
+
+- [Requirements](#requirements)
+- [Variant calling](#variant-calling)
+- [2-pass STAR alignment](#2-pass-star-alignment)
+- [Subset bam file by cell clusters](#subset-bam-file-by-cell-clusters)
+- [Make density plots](#make-density-plots)
+
+## Requirements
 
 - Python 3.10.0
 - STAR aligner v2.7.10a
@@ -8,7 +16,9 @@
 ## Variant calling
 
 This script runs the `run_pysam_varcall` to call variants from a list of bam files.
-It uses the pysam library to call variants.
+The variants are already listed in the script. Using pysam, the script will count the 
+number of reads supporting the alleles of the variant.   
+
 Usage:
 ```
 python run_pysam_varcall.py \
@@ -86,7 +96,7 @@ Seurat csv:
 The first column should contain the barcodes (it can include dash).
 
 The column `orig.ident` contains all the samples in the object. Select one of these values to input in the 
-python script (-s option).  
+python script (`-s` option).  
 
 The script will split the bam file based on the `Cell_type` column. 
 
@@ -113,7 +123,7 @@ python ggsashimi.py \
 `--gtf` and `--gene-gtf` are the gtf files. You can use the same file for both options, or subset a GTF 
 to only include records for the gene of interest for the --gene-gtf option.
 
-The FOFN file (`--b` option) is a tab-separated file with the bam files you wish to use for the density plot:
+The FOFN file (`-b` option) is a tab-separated file with the bam files you wish to use for the density plot:
 
 ```
 id1    sample1.bam   sample1
@@ -121,7 +131,7 @@ id1    sample1.bam   sample1
 where the columns are id, path to bam file and sample name. The id is only used to tell samples apart. 
 The sample name is used to label the samples in the plot.
 
-Second, the `plot_density.R` script will generate the plot. It takes as input the sashimi file and the `--gene-gtf` file.
+Second, the `plot_density.R` script generates the plot. It takes as input the sashimi file and the `--gene-gtf` file.
 See the .Rmd file for instructions on how to run the script.
 
 
