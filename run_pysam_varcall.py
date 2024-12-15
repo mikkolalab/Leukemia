@@ -10,12 +10,17 @@ import os
 import multiprocessing as mp
 import vcf 
 import logging
-
+import argparse
 
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--bam_fofn", required=True)
+    parser.add_argument("--output_file_name", required=True)
+    args = parser.parse_args()
 
     VARS = [("ABL1",  "NM_005157", "+", 763,  "G", "A", "chr9", 130862976),
             ("ABL1",  "NM_005157", "+", 944,  "C", "T", "chr9", 130872896),
@@ -85,21 +90,13 @@ if __name__ == "__main__":
 
     rev = {"A" : "T", "T" : "A", "C" : "G", "G" : "C"}
 
-    bam_files = glob('data/shortread_10X_5UTR_singlecell_mecom*/bam/*2passAligned.out.sorted_cls_*.bam')
-    bam_files = list(bam_files)
+    df = pd.read_csv(args.bam_fofn, sep = "\t")
 
-    sys.stderr.write(f"Found {len(bam_files)} \n")
-    MAT = defaultdict(dict)
+    for bi, row in df.iterrows():
 
-    for bi, bam_file in enumerate(bam_files):
-        try:
-            pattern = r'data/shortread_10X_5UTR_singlecell_mecom/bam/(.+).star_remap.2passAligned.out.sorted_cls_(.+).bam'
-            sample  = re.search(pattern, bam_file).group(1)
-            cluster = re.search(pattern, bam_file).group(2)
-        except:
-            pattern = r'data/shortread_10X_5UTR_singlecell_mecom2/bam/(.+).2passAligned.out.sorted_cls_(.+).bam'
-            sample  = re.search(pattern, bam_file).group(1)
-            cluster = re.search(pattern, bam_file).group(2)
+        bam_file = row["bam"]
+        sample   = row["sample"]
+        cluster  = row["cluster"]
 
         logging.info(f"Processing {bi}, {sample} {cluster}")
         
@@ -163,8 +160,7 @@ if __name__ == "__main__":
         bh.close()
 
     df = pd.DataFrame(MAT).T
-    output_file_name = "data/shortread_10X_5UTR_singlecell_mecom/variants_of_interest.tsv"
-    df.to_csv(output_file_name, sep = "\t")
+    df.to_csv(args.output_file_name, sep = "\t")
 
     print(output_file_name)
     print(df)

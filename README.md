@@ -1,6 +1,53 @@
+# Requirements
+
+- Python 3.10.0
+- STAR aligner v2.7.10a
+- R 4.2.2
+- Rstudio 2024.04.1+748
+
+## Variant calling
+
+This script runs the `run_pysam_varcall` to call variants from a list of bam files.
+It uses the pysam library to call variants.
+Usage:
+```
+python run_pysam_varcall.py \
+       --bam_fofn bam.fofn.txt \
+       --output_file_name output.tsv \
+```
+Where the fofn file is a tab-separated file with the bam files you wish to use for the variant calling:
+
+```    
+bam   sample   cluster
+sample1.cls1.bam   sample1       cluster1
+sample1.cls2.bam   sample1       cluster2
+```
+
+If the bam files are not spliut by cluster you can put NA in the cluster column.
+
+
 ## 2-pass STAR alignment 
 
-remap.two_pass_start.sh
+This script runs the STAR aligner in two passes to improve the aligmnet of split reads. 
+In the first pass, it skips novel junctions longer than 100 kb. It also applies more stringent 
+parameters for the alignment such as the overhang length and the number of mismatches.
+
+Usage:
+```
+qsub -t 1-N remap.two_pass_start.sh
+```
+
+This script is designed to run in the Hoffman2 cluster (or other SGE clusters). 
+It reads the input from a file called fastq.job:
+
+```
+sample1.R1.fastq.gz sample1.R2.fastq.gz sample1
+sample2.R1.fastq.gz sample2.R2.fastq.gz sample2
+```
+
+because there are two lines, the script will run two jobs (N=2).
+The STAR index, GTF file and output directory are hardcoded in the script. Please change to run
+new samples.
 
 
 ## Subset bam file by cell clusters 
@@ -48,10 +95,33 @@ You may need to edit the Seurat obhect to match this format.
 
 ## Make density plots
 
+This script makes a density plot of the reads in a gene of interest.
 
+First, you will need to generate a sashimi file using the `ggsashimi.py` script. 
+Then, you can use the `plot_density.R` script to generate the plot.
+
+Usage:
+```
 python ggsashimi.py \
-       -b data/plots/densities.${dataset}_samples.fofn.txt \
-       -o data/plots/densities.${dataset}_${GENE} \
+       -b FOFN.txt \
+       -o sashimi.gene1 \
        --gtf gencode.v44.comprehensive.annotation.gtf.gz \
        --gene-gtf gencode.v44.basic.annotation.gene_only.gtf \
-       --gene ${GENE}
+       --gene gene1 
+```
+`--gene` is the gene of interest.
+`--gtf` and `--gene-gtf` are the gtf files. You can use the same file for both options, or subset a GTF 
+to only include records for the gene of interest for the --gene-gtf option.
+
+The FOFN file (`--b` option) is a tab-separated file with the bam files you wish to use for the density plot:
+
+```
+id1    sample1.bam   sample1
+```
+where the columns are id, path to bam file and sample name. The id is only used to tell samples apart. 
+The sample name is used to label the samples in the plot.
+
+Second, the `plot_density.R` script will generate the plot. It takes as input the sashimi file and the `--gene-gtf` file.
+See the .Rmd file for instructions on how to run the script.
+
+
