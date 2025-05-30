@@ -12,15 +12,23 @@ It takes many hours to run
 It takes as input a file called fastq.job that contains fastq paths for R1. 
 Keep in mind, if using a different protocol, change --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN C = barcode ; N = UMI
 
+### input: fastq file
+### output: fastq file
+
 ## Alignment 
 2-3 hours to run
 You can use the same command as bulk alignment. 
 
+### input: fastq file
+### output: bam file
 
 
 ## Variant calling by bc 
 a few minutes
 The script calculates the allelic counts for each variant in the provided BAM files, at the single-cell level. It can handle both short read (sr) and long read (lr) sequencing data.
+
+### input: a lis of bam files and a variants file
+### output: a mutation/variant table
 
 ```
 python run_pysam_varcall.umi_bc.copy.py -m example_metadata.tsv -v variants.tsv -o variants.table.out
@@ -50,7 +58,7 @@ CBL	    NM_005188.3	    c.1112A>C	+	    A	C	chr11	119278182
 You can use the website: https://genebe.net/tools/hgvs to convert from HGVS to genomic coordinates.
 e.g. NM_003016.4:c.284C>G converts to chr17:76736877 G>C
 
-# Output
+### Output
 The output will be a file with the following columns:
 ``` 
         var1_sr_cov var1_sr_ratio   var2_sr_cov var2_sr_ratio   ... varN_sr_cov varN_sr_ratio
@@ -62,6 +70,14 @@ sm3 BC3 0.0         NA              1.0         1.0             ... 2.0         
 Where `var1`, `var2`, etc. are the variants from the variants file, and `BC1`, `BC2`, etc. are the barcodes from the metadata file.
 The entries are the allelic ratio or coverage for each variant
 
-# Integrating into Seurat object
+## Integrating into Seurat object
 a few minutes
 refer to the jupyter notebook merge_mecom_samples.ipynb 
+### input: a mutation/variant table, seurat object
+### output: a seurat object with mutations integrated
+
+## denovo mutation calling
+a few minutes
+### input: a bam file sorted and indexed
+### output: a vcf file
+script: denovo_variantcall_bcftools.sh
