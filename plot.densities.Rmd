@@ -25,8 +25,8 @@ library(data.table)
 
 setwd('/Users/giovanni/hoffman_folder/projects/MLLT3_longread_project/') # change
 
-gene.lst <- c( "GATA1", "MLLT3")
-DATASET <- 'fetalliver'
+gene.lst <- c( "GATA1" )
+DATASET <- '12'
 
 for (gene in gene.lst){
   
@@ -50,7 +50,6 @@ for (gene in gene.lst){
     		geom_line(aes(color = lab)) +
     		labs(x = NULL, y = "Coverage")+
     		facet_grid(lab~., scales = 'free')+
-        #scale_color_manual(values = brewer.pal(15, 'Spectral'))+
         coord_cartesian(xlim = c(min.start, max.end))+
     		theme_classic() +
         theme(strip.text.y = element_text(angle = 0),
@@ -61,15 +60,15 @@ for (gene in gene.lst){
     	geom_range( data = my.exon, height = 0.25) +
     	geom_range( data = my.CDS, height = 0.5) +
     	facet_wrap(gene_name ~., scales = 'free', ncol = 1)+
-    	labs(x = "Position") + 
+    	labs(x = "Position", y = "Transcript id") + 
     	theme_bw() + 
       coord_cartesian(xlim = c(min.start, max.end))+
-    	theme(legend.position="bottom")
+    	theme(legend.position="none")
     
  
-    patched_plot <- (g1  /g2) + plot_layout(heights = c(0.75, 0.25))
+    patched_plot <- (g1 /g2) + plot_layout(heights = c(0.9, 0.1))
     
-    plot.file <- paste('data/plots/densities.', DATASET, "_", gene,  ".density_plot.pdf", sep = "") # change output
+    plot.file <- paste('data/plots/densities.', DATASET, "_", gene,  ".density_plot.pdf", sep = "") 
     pdf(plot.file, width = 10, height = 12)
     print(patched_plot)
     dev.off()
@@ -78,8 +77,8 @@ for (gene in gene.lst){
     print(gene)
 }
 
-print(patched_plot)
-
+print(g1)
+print(g2)
 
 ```
 

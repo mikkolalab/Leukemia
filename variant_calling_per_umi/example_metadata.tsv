@@ -1,0 +1,5 @@
+BAM	SM	DATA_TYPE
+data/shortread_10X_5UTR_singlecell_35samples/bam/BLM_ALL_001_S6_L007_.2passAligned.out.sorted.bam	BLM_ALL_001	sr
+data/shortread_10X_5UTR_singlecell_35samples/bam/BM11_S1_L004_.2passAligned.out.sorted.bam	BM11	sr
+data/ont_data/7_FL16w_ctrlB.tagged.bam	FL16wk_ctrlB	lr
+data/ont_data/8_FL16w_T21.tagged.bam	FL16wk_T21	lr
