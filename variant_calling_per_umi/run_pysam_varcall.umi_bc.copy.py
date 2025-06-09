@@ -44,15 +44,14 @@ if __name__ == "__main__":
 
 
         for var in VARS.itertuples():
-            gPOS = var.pos
 
-            var_annot = f'{var.chrom}_{gPOS}_{var.REF}_{var.ALT}_{var.mut}'
+            var_annot = f'{var.chrom}_{var.pos}_{var.REF}_{var.ALT}_{var.mut}'
             
-            pileup = bh.pileup(var.chrom, gPOS-2, gPOS+1, truncate=True, stepper="nofilter")
+            pileup = bh.pileup(var.chrom, var.pos - 2, var.pos + 1, truncate=True, stepper="nofilter")
 
             for pileupcolumn in pileup:
                 # for snp
-                if pileupcolumn.pos == gPOS-1:
+                if pileupcolumn.pos == var.pos - 1:
                     for pileupread in pileupcolumn.pileups:
 
                         read_id = pileupread.alignment.query_name
@@ -69,8 +68,6 @@ if __name__ == "__main__":
                             if pileupread.is_del:
                                 continue
                             base = pileupread.alignment.query_sequence[pileupread.query_position]
-                            if var.strand == "-":
-                                base = rev[base]
 
                         elif len(var.REF) > len(var.ALT):
                             # for del 
@@ -109,6 +106,8 @@ if __name__ == "__main__":
 
             DP = sum(base_counter.values())
             AB = base_counter[ALT] / DP
+
+            print(sm, bc, var, Counter(base_lst), DP, AB)
 
             outline[sm, bc][f"{var}_{data_type}_cov"]   = DP #(ab_lr + ab_sr)
             outline[sm, bc][f"{var}_{data_type}_ratio"] = AB
