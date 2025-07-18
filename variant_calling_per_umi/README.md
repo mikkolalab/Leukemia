@@ -66,6 +66,11 @@ e.g. NM_003016.4:c.284C>G converts to chr17:76736877 G>C
 
 If missing, you can fill in `transcript` and `gene` with placeholder values.
 
+*NOTE* 
+- Please ensure that only one allele is present in the `ALT` column. If multiple alleles are present, e.g. "AAA/A" please split them into separate rows.
+- Also ensure that the `REF` and `ALT` alleles are one of the 4 nucleotides (A, T, C, G) and not other variant notation such as "-", "*", "." or other symbols.
+- The positions in the variants file should be 1-based, as per the VCF standard.
+
 *Output*
 The output will be a file with the following columns:
 ``` 

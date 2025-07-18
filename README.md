@@ -5,6 +5,8 @@
 - [2-pass STAR alignment](#2-pass-star-alignment)
 - [Subset bam file by cell clusters](#subset-bam-file-by-cell-clusters)
 - [Make density plots](#make-density-plots)
+- [Calculate PSI](#calculate-psi)
+
 
 ## Requirements
 
@@ -134,4 +136,36 @@ The sample name is used to label the samples in the plot.
 Second, the `plot_density.R` script generates the plot. It takes as input the sashimi file and the `--gene-gtf` file.
 See the .Rmd file for instructions on how to run the script.
 
+## Calculate PSI
 
+
+This script runs the `run_pysam_varcall` to call variants from a list of bam files.
+The variants are already listed in the script. Using pysam, the script will count the 
+number of reads supporting the alleles of the variant.   
+
+Usage:
+```
+python run_pysam_psi.umi_bc.copy.py \
+       -b file.bed \
+       -m metadata.tsv \
+       -o output.tsv \
+```
+Where the metadata file is a tab-separated file with the bam files you wish to use (Similar to the fofn file):
+
+```    
+bam   sample   cluster
+sample1.cls1.bam   sample1       cluster1
+sample1.cls2.bam   sample1       cluster2
+```
+
+The bed file should contain the regions of interest, with the following columns:
+
+```
+chrom	start	       end	       name	       score	strand
+chrX	48783180	48783220	alt_tss	-1	+
+chrX	48786585	48786590	tss	       -1	+
+chrX	48791852	48791980	intron	       -1	+
+```
+
+The `name` column is used to identify the region in the output file.
+The `score` column is not used, but it is required for compatibility. Fill in with -1 or 0.
