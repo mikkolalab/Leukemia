@@ -17,7 +17,7 @@
 
 ## Variant calling
 
-This script runs the `run_pysam_varcall` to call variants from a list of bam files.
+Run the `run_pysam_varcall` script to call variants from a list of bam files.
 The variants are already listed in the script. Using pysam, the script will count the 
 number of reads supporting the alleles of the variant.   
 
@@ -138,10 +138,8 @@ See the .Rmd file for instructions on how to run the script.
 
 ## Calculate PSI
 
-
-This script runs the `run_pysam_varcall` to call variants from a list of bam files.
-The variants are already listed in the script. Using pysam, the script will count the 
-number of reads supporting the alleles of the variant.   
+Run the script `run_pysam_psi.umi_bc.copy.py` to calculate the PSI of regions of interest.
+PSI = inclusion count / (inclusion count + exclusion count) normalized by length
 
 Usage:
 ```
@@ -162,9 +160,9 @@ The bed file should contain the regions of interest, with the following columns:
 
 ```
 chrom	start	       end	       name	       score	strand
-chrX	48783180	48783220	alt_tss	-1	+
-chrX	48786585	48786590	tss	       -1	+
-chrX	48791852	48791980	intron	       -1	+
+chrX	48783180	48783220	alt_tss       -1	+
+chrX	48786585	48786590	tss    -1	+
+chrX	48791852	48791980	intron -1	+
 ```
 
 The `name` column is used to identify the region in the output file.

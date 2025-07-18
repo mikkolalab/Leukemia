@@ -31,6 +31,8 @@ if __name__ == "__main__":
     
     region_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
+    RL_SM = defaultdict(lambda: defaultdict(int))
+
     for i, row in metadata.iterrows():
     
         bam_file, sample, data_type = row['BAM'], row['SM'], row['DATA_TYPE']
@@ -57,7 +59,13 @@ if __name__ == "__main__":
             for read in bh.fetch(region.chrom, region.start - args.ov, region.end + args.ov):
 
                 read_id = read.query_name
+                read_strand = "+" if read.is_reverse else "-"
+
+                if read_strand != region.strand:
+                    continue
+
                 RL = len(read.query_sequence)
+                RL_SM[sample][RL] += 1
 
                 try:
                     umi = reads.get_tag('UB')
@@ -101,17 +109,18 @@ if __name__ == "__main__":
                 else:
                     print("Equal overlap", sample, read_id, exons_ov, introns_ov)
                 
-                region_dict[(sample, bc, region_annot)][data_type][umi].append(inc_or_exc)
+                region_dict[(sample, bc, region_annot, region_iv.length)][data_type][umi].append(inc_or_exc)
             
         bh.close()
         logging.info(f"\tDone processing {sample} {i}")
 
 
-    outline = defaultdict(dict)                
+    outline = defaultdict(dict)      
 
-    for (sm, bc, region), val in region_dict.items():
+    for (sm, bc, region, region_len), val in region_dict.items():
 
         summary = {}
+        RL = Counter(RL_SM[sm]).most_common(1)[0][0] 
 
         for data_type, base_lst in val.items():
 
@@ -125,7 +134,14 @@ if __name__ == "__main__":
            
             DP = sum(base_counter.values())
             AC = base_counter['inc'] 
-            PSI = base_counter['inc'] / DP if DP > 0 else np.nan
+
+            NIR = base_counter['inc']/(region_len + RL - 2*args.ov)
+            NER = base_counter['exc']/(RL - 2*args.ov)
+
+            try:
+                PSI = NIR/(NIR + NER)
+            except ZeroDivisionError:
+                PSI = np.nan
 
             outline[sm, bc][f"{region}_{data_type}_cov"] = AC 
             outline[sm, bc][f"{region}_{data_type}_psi"] = PSI
