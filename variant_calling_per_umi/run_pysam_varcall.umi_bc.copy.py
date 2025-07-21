@@ -9,6 +9,25 @@ import argparse as parser
 
 rev = {"A" : "T", "T" : "A", "C" : "G", "G" : "C"}
 
+def find_pos_splice_junction(read):
+    
+    if read.is_unmapped or read.cigartuples is None:
+        return []
+
+    GPOS = read.positions[0]
+    splice_junctions = []
+    for op, length in read.cigartuples:
+        if op == 0:  # Match or mismatch
+            GPOS += length
+        elif op == 2:  # Deletion
+            GPOS += length
+        elif op == 3:  # Splice junction
+            splice_junctions.append((GPOS, length))
+            GPOS += length
+
+    return splice_junctions
+
+
 
 if __name__ == "__main__":
 
@@ -55,6 +74,7 @@ if __name__ == "__main__":
                     for pileupread in pileupcolumn.pileups:
 
                         read_id = pileupread.alignment.query_name
+                        
 
                         try:
                             umi = pileupread.alignment.get_tag('UB')
@@ -70,8 +90,12 @@ if __name__ == "__main__":
                             base = pileupread.alignment.query_sequence[pileupread.query_position]
 
                         elif len(var.REF) > len(var.ALT):
-                            # for del 
+
+                            splice_lengths = find_pos_splice_junction(pileupread.alignment)
+
                             if pileupread.indel == len(var.ALT) - len(var.REF):
+                                base = var.ALT
+                            elif (var.pos, len(var.REF) - len(var.ALT)) in splice_lengths:
                                 base = var.ALT
                             else:
                                 base = var.REF
